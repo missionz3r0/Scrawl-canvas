@@ -187,6 +187,15 @@ export default function (P = Ωempty) {
                 key = keys[i];
                 val = items[key];
 
+                // Setting an unchanged scale is a no-op. Without this guard
+                // the dirty-flag checks below re-trigger the font pipeline
+                // (dirtyFont -> temperFont -> DOM style read -> measureFont)
+                // purely because the key is present in the argument object.
+                // When a layoutTemplate is in play, scale passes through to
+                // it (see TEMPLATE_PASS_THROUGH_KEYS) - compare against the
+                // object that actually holds the value.
+                if (key === 'scale' && val === (layoutTemplate ? layoutTemplate.scale : this.scale)) continue;
+
                 if (key && key !== NAME && val != null) {
 
                     if (layoutTemplate && TEMPLATE_PASS_THROUGH_KEYS.includes(key)) {
