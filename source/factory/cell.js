@@ -45,7 +45,7 @@ import patternMix from '../mixin/pattern.js';
 import filterMix from '../mixin/filter.js';
 
 // Shared constants
-import { _atan2, _isFinite, _floor, _piDouble, _round, _values, _2D, CANVAS, FILL, HEIGHT, HIGH, IMG, MOUSE, NONE, SOURCE_OVER, SRGB, T_CANVAS, T_CELL, WIDTH, ZERO_STR, _isArray } from '../helper/shared-vars.js';
+import { _atan2, _isFinite, _floor, _piDouble, _round, _values, _2D, CANVAS, COPY, FILL, HEIGHT, HIGH, IMG, MOUSE, NONE, SOURCE_OVER, SRGB, T_CANVAS, T_CELL, WIDTH, ZERO_STR, _isArray } from '../helper/shared-vars.js';
 
 // Local constants
 const CELL = 'cell',
@@ -986,11 +986,15 @@ P.show = function () {
             // copy the base canvas over to the display canvas. This copy operation ignores any scale, roll or position attributes set on the base cell, instead complying with the controller's fit attribute requirements
             if (!this.cleared && !this.compiled) this.prepareStamp();
 
-            displayEngine.globalCompositeOperation = SOURCE_OVER;
-            displayEngine.globalAlpha = 1;
-            displayEngine.clearRect(0, 0, destWidth, destHeight);
+            // 'copy' compositing replaces every destination pixel with the
+            // source - including transparency, and including the region
+            // outside the pasted area, which the spec defines as cleared. So
+            // when the cell blits with default compositing (source-over at
+            // full alpha) the pre-blit clearRect can be folded into the
+            // drawImage itself, saving a full-canvas raster pass per frame.
+            const useCopyComposite = composite === SOURCE_OVER && alpha === 1;
 
-            displayEngine.globalCompositeOperation = composite;
+            displayEngine.globalCompositeOperation = useCopyComposite ? COPY : composite;
             displayEngine.globalAlpha = alpha;
 
             this.setImageSmoothing(displayEngine);
@@ -1060,7 +1064,7 @@ P.show = function () {
                     paste[3] = curHeight * dpr;
             }
 
-            displayEngine.clearRect(0, 0, destWidth, destHeight);
+            if (!useCopyComposite) displayEngine.clearRect(0, 0, destWidth, destHeight);
             displayEngine.drawImage(element, 0, 0, curWidth, curHeight, ...paste);
         }
         else if (scale > 0) {
