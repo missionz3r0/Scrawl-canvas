@@ -974,7 +974,10 @@ P.show = function () {
 
         displayEngine.save();
 
-        displayEngine.filter = this.filter;
+        // Only touch engine.filter when a filter is actually in play; assigning
+        // it (even to 'none') can drop the canvas off accelerated paths in
+        // some browsers.
+        if (this.filter !== NONE && displayEngine.filter !== this.filter) displayEngine.filter = this.filter;
 
         const dpr = checkPixelRatio();
 
