@@ -97,6 +97,7 @@ export const COLORS_TO_ALPHA = 'colors-to-alpha';
 export const COMPOSE = 'compose';
 export const CONTROL = 'control';
 export const COORD = 'coord';
+export const COPY = 'copy';
 export const CORNER_LABELS = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
 export const CORNER_SELECTOR = '[data-scrawl-corner-div="sc"]';
 export const CORRODE = 'corrode';
