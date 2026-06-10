@@ -472,9 +472,28 @@ const updateUiSubscribedElement = function (art) {
                     // + Which leads to the normal resize test - `if (w !== here.w || h !== here.h)` - triggering on every mouse/scroll/resize event, which in turn leads to the canvas dimensions increasing uncontrollably.
                     // + Solved by subtracting padding/border values from the `getBoundingClientRect` dimension values before performing the test.
 
-                    const s = dom.computedStyles,
-                        hw = _floor(here.w - parseFloat(s.borderLeftWidth) - parseFloat(s.borderRightWidth) - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight)),
-                        hh = _floor(here.h - parseFloat(s.borderTopWidth) - parseFloat(s.borderBottomWidth) - parseFloat(s.paddingTop) - parseFloat(s.paddingBottom));
+                    // `dom.computedStyles` is a live CSSStyleDeclaration; reading it
+                    // can force a style recalc, and this code runs on every
+                    // requestAnimationFrame tick while the mouse is moving. The
+                    // border/padding box metrics only change on layout changes, so
+                    // they are cached and refreshed when the viewport changes.
+                    // Caveat: a border/padding change made outside a viewport
+                    // resize (eg via a CSS class swap) is only picked up at the
+                    // next resize.
+                    let metrics = dom.uiBoxMetrics;
+
+                    if (!metrics || getViewportChanged()) {
+
+                        const s = dom.computedStyles;
+
+                        metrics = dom.uiBoxMetrics = [
+                            parseFloat(s.borderLeftWidth) + parseFloat(s.borderRightWidth) + parseFloat(s.paddingLeft) + parseFloat(s.paddingRight),
+                            parseFloat(s.borderTopWidth) + parseFloat(s.borderBottomWidth) + parseFloat(s.paddingTop) + parseFloat(s.paddingBottom),
+                        ];
+                    }
+
+                    const hw = _floor(here.w - metrics[0]),
+                        hh = _floor(here.h - metrics[1]);
 
                     if (w !== hw || h !== hh) {
 
