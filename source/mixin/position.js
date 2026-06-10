@@ -763,8 +763,14 @@ export default function (P = Ωempty) {
     };
     S.scale = function (item) {
 
-        this.scale = item;
-        this.dirtyScale = true;
+        // Setting an unchanged scale is a no-op; the dirtyScale cascade
+        // (dimensions, handle, shape species recalculation) is expensive
+        // enough that callers re-applying the same value should not pay it.
+        if (item !== this.scale) {
+
+            this.scale = item;
+            this.dirtyScale = true;
+        }
     };
     D.scale = function (item) {
 
